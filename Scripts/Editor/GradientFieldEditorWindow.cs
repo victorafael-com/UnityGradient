@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -24,6 +25,9 @@ public class GradientFieldEditorWindow : EditorWindow
 	private EditMode editMode = EditMode.color;
 	private SerializedProperty selectedProperty;
 
+	private Texture2D alphaHandle;
+	private Texture2D colorHandle;
+
 	public void Setup(SerializedProperty property) {
 		m_property = property;
 
@@ -42,6 +46,10 @@ public class GradientFieldEditorWindow : EditorWindow
 
 		GradientFieldDrawer.SetGradientToTexture(GradientFieldDrawer.GenerateGradient(property), gradientTexture);
 		bgTexture = GradientFieldDrawer.GenerateInspectorBackground(30, 2);
+
+		
+		alphaHandle = LoadIconFromRelativePath("/Resources/GradientAlphaKey.png");
+		colorHandle = LoadIconFromRelativePath("/Resources/GradientColorKey.png");
 	}
 
 	private void OnGUI() {
@@ -65,10 +73,13 @@ public class GradientFieldEditorWindow : EditorWindow
 		GUI.DrawTexture(gradientArea, bgTexture);
 
 		GUI.DrawTexture(gradientArea, gradientTexture);
-		
+
+		DrawKeyLine(gradientArea, gradientArea.yMin - 16, 14, EditMode.alpha, alphaArrayProperty);
+		DrawKeyLine(gradientArea, gradientArea.yMax + 2, 14, EditMode.color, colorArrayProperty);
+
+		GUI.color = Color.white;
 
 		GUILayout.Space(20);
-		GUI.color = Color.white;
 
 		EditorGUILayout.BeginHorizontal();
 
@@ -87,7 +98,6 @@ public class GradientFieldEditorWindow : EditorWindow
 
 		EditorGUIUtility.labelWidth = 0;
 
-
 		if (EditorGUI.EndChangeCheck()) {
 			GradientFieldDrawer.ResetGradient();
 
@@ -98,4 +108,37 @@ public class GradientFieldEditorWindow : EditorWindow
 			Repaint();
 		}
 	}
+	void DrawKeyLine(Rect bounds, float y, float height, EditMode targetEditMode, SerializedProperty array) {
+		int arraySize = array.arraySize;
+		SerializedProperty prop;
+		Rect r;
+		for(int i = 0; i < arraySize; i++) {
+			prop = array.GetArrayElementAtIndex(i);
+			float x = Mathf.Lerp(bounds.xMin, bounds.xMax, prop.FindPropertyRelative("time").floatValue / 100);
+			x -= 3;
+
+			Color col;
+			if (targetEditMode == EditMode.alpha) {
+				float a = prop.FindPropertyRelative("alpha").floatValue;
+				col = new Color(a, a, a);
+			} else {
+				col = prop.FindPropertyRelative("color").colorValue;
+			}
+
+			GUI.color = col;
+			r = new Rect(x, y, 9, height);
+			GUI.DrawTexture(r, targetEditMode == EditMode.alpha ? alphaHandle : colorHandle);
+		}
+	}
+
+	//From: https://forum.unity.com/threads/editorguiutility-load-unity-documentation-inconsistency.561262/
+	private Texture2D LoadIconFromRelativePath(string relativePath) {
+		MonoScript asset = MonoScript.FromScriptableObject(this);
+		string myPath = AssetDatabase.GetAssetPath(asset);
+		string[] myPathArray = myPath.Split('/');
+		myPath = String.Join("/", myPathArray, 0, myPathArray.Length - 1);
+		myPath += relativePath;
+		return EditorGUIUtility.Load(myPath) as Texture2D;
+	}
+
 }
