@@ -20,6 +20,7 @@ public class Test : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+		gradientField.mode = gradient.mode;
 		gradientField.alphaKeys = gradient.alphaKeys;
 		gradientField.colorKeys = gradient.colorKeys;
     }

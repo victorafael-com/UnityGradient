@@ -15,7 +15,7 @@ public class GradientField
 	}
 
 	#region Getters and Setters
-	public GradientMode gradientMode { get; set; }
+	public GradientMode mode { get; set; }
 
 	public GradientColorKey[] colorKeys {
 		get {
@@ -79,14 +79,22 @@ public class GradientField
 	}
 
 	private Color GetColor(float time) {
-		GradientColorKey prev = GetPreviousKey(m_colorKeys, time, c => c.time);
 		GradientColorKey next = GetNextKey(m_colorKeys, time, c => c.time);
+
+		if (mode == GradientMode.Fixed)
+			return next.color;
+
+		GradientColorKey prev = GetPreviousKey(m_colorKeys, time, c => c.time);
 
 		return Color.Lerp(prev.color, next.color, Mathf.InverseLerp(prev.time, next.time, time));
 	}
 	private float GetAlpha(float time) {
-		GradientAlphaKey prev = GetPreviousKey(m_alphaKeys, time, c => c.time);
 		GradientAlphaKey next = GetNextKey(m_alphaKeys, time, c => c.time);
+
+		if (mode == GradientMode.Fixed)
+			return next.alpha;
+
+		GradientAlphaKey prev = GetPreviousKey(m_alphaKeys, time, c => c.time);
 
 		return Mathf.Lerp(prev.alpha, next.alpha, Mathf.InverseLerp(prev.time, next.time, time));
 	}
