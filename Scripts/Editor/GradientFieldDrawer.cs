@@ -4,13 +4,13 @@ using UnityEngine;
 using UnityEditor;
 
 [CustomPropertyDrawer(typeof(GradientField))]
-public class GradientFieldEditor : PropertyDrawer {
+public class GradientFieldDrawer : PropertyDrawer {
 	const float textureSizeMultiplier = 0.5f;
 
 	private static Texture2D m_checkerTexture;
 	private static Texture2D m_inspectorBackground;
 
-	private Texture2D processedGradient;
+	private static Texture2D processedGradient;
 
 	public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
 		return EditorGUIUtility.singleLineHeight;
@@ -22,7 +22,12 @@ public class GradientFieldEditor : PropertyDrawer {
 		CheckTextureGradient(rect.width, property);
 
 		GUI.color = new Color(0.4f, 0.4f, 0.4f);
-		GUI.DrawTexture(rect, Texture2D.whiteTexture);
+		var content = new GUIContent(Texture2D.whiteTexture);
+
+		if (GUI.Button(rect, content)) {
+			OpenWindow(property);
+		}
+
 		GUI.color = Color.white;
 
 		rect.x += 1;
@@ -32,6 +37,22 @@ public class GradientFieldEditor : PropertyDrawer {
 
 		GUI.DrawTexture(rect, GetInspectorBackground());
 		GUI.DrawTexture(rect, processedGradient);
+	}
+
+	void OpenWindow(SerializedProperty property) {
+		GradientField gradient = (GradientField)fieldInfo.GetValue(property.serializedObject.targetObject);
+
+		GradientFieldEditorWindow window = ScriptableObject.CreateInstance<GradientFieldEditorWindow>();
+		window.Setup(property);
+
+		window.ShowAuxWindow();
+	}
+
+	#region Gradient Texture
+
+	internal static void ResetGradient() {
+		processedGradient = null;
+		
 	}
 
 	private void CheckTextureGradient(float width, SerializedProperty property) {
@@ -46,6 +67,62 @@ public class GradientFieldEditor : PropertyDrawer {
 
 		UpdateTextureGradient(textureWidth, property);
 	}
+
+	private void UpdateTextureGradient(int width, SerializedProperty property) {
+		if (processedGradient == null || processedGradient.width != width)
+			processedGradient = new Texture2D(width, 1);
+
+		var gradient = GenerateGradient(property);
+
+		Color[] colors = new Color[width];
+		for (int i = 0; i < width; i++) {
+			float lerp = (float)i / (width - 1);
+			colors[i] = gradient.Evaluate(lerp);
+		}
+
+		processedGradient.SetPixels(colors);
+		processedGradient.Apply();
+	}
+
+	GradientField GenerateGradient(SerializedProperty property) {
+		var gradient = new GradientField();
+
+		gradient.mode = (GradientMode)property.FindPropertyRelative("m_mode").intValue;
+		var colorProps = property.FindPropertyRelative("m_serializedColorKeys");
+		var alphaProps = property.FindPropertyRelative("m_serializedAlphaKeys");
+
+
+		GradientColorKey[] colorKeys;
+		GradientAlphaKey[] alphaKeys;
+
+		SerializedProperty prop;
+
+		colorKeys = new GradientColorKey[colorProps.arraySize];
+		for (int i = 0; i < colorKeys.Length; i++) {
+			prop = colorProps.GetArrayElementAtIndex(i);
+			colorKeys[i] = new GradientColorKey(
+				prop.FindPropertyRelative("color").colorValue,
+				prop.FindPropertyRelative("time").floatValue / 100f
+			);
+		}
+
+		alphaKeys = new GradientAlphaKey[alphaProps.arraySize];
+		for(int i = 0; i < alphaKeys.Length; i++) {
+			prop = alphaProps.GetArrayElementAtIndex(i);
+			alphaKeys[i] = new GradientAlphaKey(
+				prop.FindPropertyRelative("alpha").floatValue,
+				prop.FindPropertyRelative("time").floatValue / 100f
+			);
+		}
+
+		gradient.alphaKeys = alphaKeys;
+		gradient.colorKeys = colorKeys;
+
+		return gradient;
+	}
+	#endregion
+
+	#region Support Textures
 
 	public static Texture2D GetCheckerTexture() {
 		if (m_checkerTexture == null) {
@@ -100,19 +177,6 @@ public class GradientFieldEditor : PropertyDrawer {
 		return m_inspectorBackground;
 	}
 
-	private void UpdateTextureGradient(int width, SerializedProperty property) {
-		if (processedGradient == null || processedGradient.width != width)
-			processedGradient = new Texture2D(width, 1);
+	#endregion
 
-		GradientField gradient = (GradientField) fieldInfo.GetValue(property.serializedObject.targetObject);
-
-		Color[] colors = new Color[width];
-		for (int i = 0; i < width; i++) {
-			float lerp = (float)i / (width - 1);
-			colors[i] = gradient.Evaluate(lerp);
-		}
-
-		processedGradient.SetPixels(colors);
-		processedGradient.Apply();
-	}
 }

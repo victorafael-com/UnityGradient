@@ -34,9 +34,9 @@ public class Test : MonoBehaviour
 		gradClamped.material.color = gradientField.Evaluate(time);
 
 		refPingPong.material.color = gradient.Evaluate(Mathf.PingPong(Time.time * .3f, 1));
-		gradPingPong.material.color = gradientField.Evaluate(Time.time * .3f, GradientField.GradientRepeatMode.PingPong);
+		gradPingPong.material.color = gradientField.Evaluate(Time.time * .3f, GradientRepeatMode.PingPong);
 
 		refRepeat.material.color = gradient.Evaluate(Mathf.Repeat(Time.time * .3f, 1));
-		gradRepeat.material.color = gradientField.Evaluate(Time.time * .3f, GradientField.GradientRepeatMode.Repeat);
+		gradRepeat.material.color = gradientField.Evaluate(Time.time * .3f, GradientRepeatMode.Repeat);
 	}
 }

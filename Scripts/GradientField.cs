@@ -7,18 +7,59 @@ using System.Linq;
 [Serializable]
 public class GradientField
 {
-	private delegate float GetFloat();
-	public enum GradientRepeatMode {
-		Clamped,
-		Repeat,
-		PingPong
+	#region Serializable Classes
+
+	//I Don't know how Unity serializes the color and gradients. so I'm making those complementary classes to store the data.
+
+	[System.Serializable]
+	public class SerializableColorKey {
+		public Color color;
+		public float time;
+
+		public SerializableColorKey(Color c, float t) {
+			color = c;
+			time = t;
+		}
+
+		public static GradientColorKey[] GetKeys(SerializableColorKey[] serialized) {
+			GradientColorKey[] result = new GradientColorKey[serialized.Length];
+			for (int i = 0; i < serialized.Length; i++) {
+				result[i] = new GradientColorKey(serialized[i].color, serialized[i].time / 100);
+			}
+			return result;
+		}
 	}
+	[System.Serializable]
+	public class SerializableAlphaKey {
+		[Range(0,1)]
+		public float alpha;
+		public float time;
 
+		public SerializableAlphaKey(float a, float t) {
+			alpha = a;
+			time = t;
+		}
+
+		public static GradientAlphaKey[] GetKeys(SerializableAlphaKey[] serialized) {
+			GradientAlphaKey[] result = new GradientAlphaKey[serialized.Length];
+			for (int i = 0; i < serialized.Length; i++) {
+				result[i] = new GradientAlphaKey(serialized[i].alpha, serialized[i].time / 100);
+			}
+			return result;
+		}
+	}
+	#endregion
+	
 	#region Getters and Setters
-	public GradientMode mode { get; set; }
-
+	public GradientMode mode {
+		get => m_mode;
+		set => m_mode = value;
+	}
 	public GradientColorKey[] colorKeys {
 		get {
+			if(m_colorKeys == null) {
+				m_colorKeys = SerializableColorKey.GetKeys(m_serializedColorKeys);
+			}
 			return m_colorKeys;
 		}
 		set {
@@ -38,6 +79,9 @@ public class GradientField
 	}
 	public GradientAlphaKey[] alphaKeys {
 		get {
+			if(m_alphaKeys == null) {
+				m_alphaKeys = SerializableAlphaKey.GetKeys(m_serializedAlphaKeys);
+			}
 			return m_alphaKeys;
 		}
 		set {
@@ -57,18 +101,26 @@ public class GradientField
 	}
 	#endregion
 
+	#region Variables
 	[SerializeField, HideInInspector]
-	public GradientColorKey[] m_colorKeys = new GradientColorKey[2] {
-		new GradientColorKey(Color.white, 0),
-		new GradientColorKey(Color.white, 1)
+	private GradientMode m_mode;
+
+	private GradientColorKey[] m_colorKeys;
+	private GradientAlphaKey[] m_alphaKeys;
+
+	[SerializeField, HideInInspector]
+	private SerializableColorKey[] m_serializedColorKeys = new SerializableColorKey[2] {
+		new SerializableColorKey(Color.white, 0),
+		new SerializableColorKey(Color.white, 100)
 	};
 
 	[SerializeField, HideInInspector]
-	public GradientAlphaKey[] m_alphaKeys = new GradientAlphaKey[2] {
-		new GradientAlphaKey(1,0),
-		new GradientAlphaKey(1,1)
+	private SerializableAlphaKey[] m_serializedAlphaKeys = new SerializableAlphaKey[2] {
+		new SerializableAlphaKey(1,0),
+		new SerializableAlphaKey(1,100)
 	};
-	
+	#endregion
+
 	public Color Evaluate(float time, GradientRepeatMode repeatMode = GradientRepeatMode.Clamped) {
 		time = NormalizeTime(time, repeatMode);
 
@@ -79,22 +131,23 @@ public class GradientField
 	}
 
 	private Color GetColor(float time) {
-		GradientColorKey next = GetNextKey(m_colorKeys, time, c => c.time);
+		GradientColorKey next = GetNextKey(colorKeys, time, c => c.time);
 
 		if (mode == GradientMode.Fixed)
 			return next.color;
 
-		GradientColorKey prev = GetPreviousKey(m_colorKeys, time, c => c.time);
+		GradientColorKey prev = GetPreviousKey(colorKeys, time, c => c.time);
 
 		return Color.Lerp(prev.color, next.color, Mathf.InverseLerp(prev.time, next.time, time));
 	}
+
 	private float GetAlpha(float time) {
-		GradientAlphaKey next = GetNextKey(m_alphaKeys, time, c => c.time);
+		GradientAlphaKey next = GetNextKey(alphaKeys, time, c => c.time);
 
 		if (mode == GradientMode.Fixed)
 			return next.alpha;
-
-		GradientAlphaKey prev = GetPreviousKey(m_alphaKeys, time, c => c.time);
+		
+		GradientAlphaKey prev = GetPreviousKey(alphaKeys, time, c => c.time);
 
 		return Mathf.Lerp(prev.alpha, next.alpha, Mathf.InverseLerp(prev.time, next.time, time));
 	}
