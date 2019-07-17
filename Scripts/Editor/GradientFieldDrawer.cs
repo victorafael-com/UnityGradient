@@ -5,7 +5,7 @@ using UnityEditor;
 
 [CustomPropertyDrawer(typeof(GradientField))]
 public class GradientFieldDrawer : PropertyDrawer {
-	const float textureSizeMultiplier = 0.5f;
+	const int GradientSize = 200;
 
 	private static Texture2D m_checkerTexture;
 	private static Texture2D m_inspectorBackground;
@@ -44,6 +44,8 @@ public class GradientFieldDrawer : PropertyDrawer {
 
 		GradientFieldEditorWindow window = ScriptableObject.CreateInstance<GradientFieldEditorWindow>();
 		window.Setup(property);
+		window.minSize = new Vector2(550, 240);
+		window.titleContent = new GUIContent("Gradient Editor");
 
 		window.ShowAuxWindow();
 	}
@@ -56,7 +58,7 @@ public class GradientFieldDrawer : PropertyDrawer {
 	}
 
 	private void CheckTextureGradient(float width, SerializedProperty property) {
-		int textureWidth = Mathf.Abs(Mathf.FloorToInt(width * textureSizeMultiplier));
+		int textureWidth = GradientSize;
 
 		if (processedGradient != null && processedGradient.width == textureWidth) {
 			return;
@@ -74,17 +76,23 @@ public class GradientFieldDrawer : PropertyDrawer {
 
 		var gradient = GenerateGradient(property);
 
+		SetGradientToTexture(gradient, processedGradient);
+	}
+
+	public static void SetGradientToTexture(GradientField gradient, Texture2D targetTexture) {
+		int width = targetTexture.width;
+
 		Color[] colors = new Color[width];
 		for (int i = 0; i < width; i++) {
 			float lerp = (float)i / (width - 1);
 			colors[i] = gradient.Evaluate(lerp);
 		}
 
-		processedGradient.SetPixels(colors);
-		processedGradient.Apply();
+		targetTexture.SetPixels(colors);
+		targetTexture.Apply();
 	}
 
-	GradientField GenerateGradient(SerializedProperty property) {
+	public static GradientField GenerateGradient(SerializedProperty property) {
 		var gradient = new GradientField();
 
 		gradient.mode = (GradientMode)property.FindPropertyRelative("m_mode").intValue;
@@ -151,30 +159,37 @@ public class GradientFieldDrawer : PropertyDrawer {
 		return m_checkerTexture;
 	}
 
-	public static Texture2D GetInspectorBackground() {
+	private Texture2D GetInspectorBackground() {
 		if (m_inspectorBackground != null)
 			return m_inspectorBackground;
 
+		m_inspectorBackground = GenerateInspectorBackground(8, 1);
+
+		return m_inspectorBackground;
+	}
+
+	public static Texture2D GenerateInspectorBackground(int tileX, int tileY) {
+
 		var checkerTexture = GetCheckerTexture();
-
-		int horizontalRepeats = 8;
-
-		int width = checkerTexture.width * horizontalRepeats;
-
-
-		var checkerPixels = checkerTexture.GetPixels();
 
 		Vector2Int checkerSize = new Vector2Int(checkerTexture.width, checkerTexture.height);
 
-		m_inspectorBackground = new Texture2D(width, checkerSize.y);
+		int width = checkerSize.x * tileX;
+		int height = checkerSize.y * tileY;
 
-		for (int i = 0; i < horizontalRepeats; i++) {
-			m_inspectorBackground.SetPixels(i * checkerSize.x, 0, checkerSize.x, checkerSize.y, checkerPixels);
+		var checkerPixels = checkerTexture.GetPixels();
+
+		var texture = new Texture2D(width, height);
+
+		for (int x = 0; x < tileX; x++) {
+			for(int y = 0; y < tileY; y++) {
+				texture.SetPixels(x * checkerSize.x, y * checkerSize.y, checkerSize.x, checkerSize.y, checkerPixels);
+			}
 		}
 
-		m_inspectorBackground.Apply();
+		texture.Apply();
 
-		return m_inspectorBackground;
+		return texture;
 	}
 
 	#endregion

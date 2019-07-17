@@ -20,6 +20,10 @@ public class GradientField
 			color = c;
 			time = t;
 		}
+		public SerializableColorKey(GradientColorKey ck) {
+			color = ck.color;
+			time = ck.time * 100;
+		}
 
 		public static GradientColorKey[] GetKeys(SerializableColorKey[] serialized) {
 			GradientColorKey[] result = new GradientColorKey[serialized.Length];
@@ -38,6 +42,10 @@ public class GradientField
 		public SerializableAlphaKey(float a, float t) {
 			alpha = a;
 			time = t;
+		}
+		public SerializableAlphaKey(GradientAlphaKey ak) {
+			alpha = ak.alpha;
+			time = ak.time * 100;
 		}
 
 		public static GradientAlphaKey[] GetKeys(SerializableAlphaKey[] serialized) {
@@ -75,6 +83,13 @@ public class GradientField
 			} else {
 				m_colorKeys = value;
 			}
+
+#if UNITY_EDITOR
+			m_serializedColorKeys = new SerializableColorKey[value.Length];
+			for(int i = 0; i < value.Length; i++) {
+				m_serializedColorKeys[i] = new SerializableColorKey(value[i]);
+			}
+#endif
 		}
 	}
 	public GradientAlphaKey[] alphaKeys {
@@ -97,6 +112,13 @@ public class GradientField
 			} else {
 				m_alphaKeys = value;
 			}
+
+#if UNITY_EDITOR
+			m_serializedAlphaKeys = new SerializableAlphaKey[value.Length];
+			for (int i = 0; i < value.Length; i++) {
+				m_serializedAlphaKeys[i] = new SerializableAlphaKey(value[i]);
+			}
+#endif
 		}
 	}
 	#endregion

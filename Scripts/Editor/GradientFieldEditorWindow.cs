@@ -9,6 +9,10 @@ public class GradientFieldEditorWindow : EditorWindow
 		color,
 		alpha
 	}
+
+	private Texture2D gradientTexture;
+	private Texture2D bgTexture;
+
 	private SerializedProperty m_property;
 
 	private SerializedProperty modeProperty;
@@ -32,6 +36,12 @@ public class GradientFieldEditorWindow : EditorWindow
 		selectedItem = 0;
 
 		selectedProperty = colorArrayProperty.GetArrayElementAtIndex(0);
+
+		gradientTexture = new Texture2D(400, 1);
+		gradientTexture.wrapMode = TextureWrapMode.Clamp;
+
+		GradientFieldDrawer.SetGradientToTexture(GradientFieldDrawer.GenerateGradient(property), gradientTexture);
+		bgTexture = GradientFieldDrawer.GenerateInspectorBackground(30, 2);
 	}
 
 	private void OnGUI() {
@@ -39,9 +49,26 @@ public class GradientFieldEditorWindow : EditorWindow
 
 		EditorGUILayout.PropertyField(modeProperty);
 
+		GUILayout.Space(20);
 
+		Rect gradientArea = EditorGUILayout.GetControlRect(GUILayout.Height(50));
 
-		//Edit selected item
+		GUI.color = Color.gray;
+		GUI.DrawTexture(gradientArea, Texture2D.whiteTexture);
+		gradientArea.x += 1;
+		gradientArea.y += 1;
+		gradientArea.width -= 2;
+		gradientArea.height -= 2;
+
+		GUI.color = Color.white;
+
+		GUI.DrawTexture(gradientArea, bgTexture);
+
+		GUI.DrawTexture(gradientArea, gradientTexture);
+		
+
+		GUILayout.Space(20);
+		GUI.color = Color.white;
 
 		EditorGUILayout.BeginHorizontal();
 
@@ -65,6 +92,8 @@ public class GradientFieldEditorWindow : EditorWindow
 			GradientFieldDrawer.ResetGradient();
 
 			m_property.serializedObject.ApplyModifiedProperties();
+
+			GradientFieldDrawer.SetGradientToTexture(GradientFieldDrawer.GenerateGradient(m_property), gradientTexture);
 
 			Repaint();
 		}
