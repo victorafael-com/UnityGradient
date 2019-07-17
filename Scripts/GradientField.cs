@@ -57,8 +57,17 @@ public class GradientField
 	}
 	#endregion
 
-	[SerializeField, HideInInspector] public GradientColorKey[] m_colorKeys;
-	[SerializeField, HideInInspector] public GradientAlphaKey[] m_alphaKeys;
+	[SerializeField, HideInInspector]
+	public GradientColorKey[] m_colorKeys = new GradientColorKey[2] {
+		new GradientColorKey(Color.white, 0),
+		new GradientColorKey(Color.white, 1)
+	};
+
+	[SerializeField, HideInInspector]
+	public GradientAlphaKey[] m_alphaKeys = new GradientAlphaKey[2] {
+		new GradientAlphaKey(1,0),
+		new GradientAlphaKey(1,1)
+	};
 	
 	public Color Evaluate(float time, GradientRepeatMode repeatMode = GradientRepeatMode.Clamped) {
 		time = NormalizeTime(time, repeatMode);

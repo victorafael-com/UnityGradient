@@ -598,7 +598,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gradient:
     serializedVersion: 2
-    key0: {r: 0.13679248, g: 0.65164304, b: 1, a: 1}
+    key0: {r: 0.13679248, g: 0.65164304, b: 1, a: 0}
     key1: {r: 0.44831958, g: 1, b: 0.3254717, a: 1}
     key2: {r: 1, g: 0.989954, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
@@ -607,7 +607,7 @@ MonoBehaviour:
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 43176
-    ctime1: 47802
+    ctime1: 44691
     ctime2: 55127
     ctime3: 0
     ctime4: 0
@@ -615,7 +615,7 @@ MonoBehaviour:
     ctime6: 0
     ctime7: 0
     atime0: 0
-    atime1: 65535
+    atime1: 26792
     atime2: 0
     atime3: 0
     atime4: 0
