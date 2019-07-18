@@ -66,7 +66,7 @@ public class GradientField
 	public GradientColorKey[] colorKeys {
 		get {
 			if(m_colorKeys == null) {
-				m_colorKeys = SerializableColorKey.GetKeys(m_serializedColorKeys);
+				colorKeys = SerializableColorKey.GetKeys(m_serializedColorKeys);
 			}
 			return m_colorKeys;
 		}
@@ -84,6 +84,8 @@ public class GradientField
 				m_colorKeys = value;
 			}
 
+			m_colorKeys = m_colorKeys.OrderBy(c => c.time).ToArray();
+
 #if UNITY_EDITOR
 			m_serializedColorKeys = new SerializableColorKey[value.Length];
 			for(int i = 0; i < value.Length; i++) {
@@ -95,7 +97,7 @@ public class GradientField
 	public GradientAlphaKey[] alphaKeys {
 		get {
 			if(m_alphaKeys == null) {
-				m_alphaKeys = SerializableAlphaKey.GetKeys(m_serializedAlphaKeys);
+				alphaKeys = SerializableAlphaKey.GetKeys(m_serializedAlphaKeys);
 			}
 			return m_alphaKeys;
 		}
@@ -112,6 +114,8 @@ public class GradientField
 			} else {
 				m_alphaKeys = value;
 			}
+
+			m_alphaKeys = m_alphaKeys.OrderBy(a => a.time).ToArray();
 
 #if UNITY_EDITOR
 			m_serializedAlphaKeys = new SerializableAlphaKey[value.Length];
@@ -173,6 +177,14 @@ public class GradientField
 
 		return Mathf.Lerp(prev.alpha, next.alpha, Mathf.InverseLerp(prev.time, next.time, time));
 	}
+
+	/*
+	 *   0 - 0
+	 *   1 - 0.2
+	 *   2 - 0.4
+	 *   3 - 0.6
+	 * 
+	 */
 
 	private T GetPreviousKey<T>(T[] array, float time, Func<T, float> getTime) {
 		int index = -1;

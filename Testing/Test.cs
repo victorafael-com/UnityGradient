@@ -20,15 +20,13 @@ public class Test : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-		gradientField.mode = gradient.mode;
-		gradientField.alphaKeys = gradient.alphaKeys;
-		gradientField.colorKeys = gradient.colorKeys;
     }
 
+	public float time;
     // Update is called once per frame
     void Update()
     {
-		float time = Time.time * 0.3f;
+		time = Time.time * 0.3f;
 
 		refClamped.material.color = gradient.Evaluate(time);
 		gradClamped.material.color = gradientField.Evaluate(time);

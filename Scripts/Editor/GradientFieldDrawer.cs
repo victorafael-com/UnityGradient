@@ -92,39 +92,44 @@ public class GradientFieldDrawer : PropertyDrawer {
 		targetTexture.Apply();
 	}
 
-	public static GradientField GenerateGradient(SerializedProperty property) {
+	public static GradientField GenerateGradient(SerializedProperty property, int excludeColor = -1, int excludeAlpha = -1) {
 		var gradient = new GradientField();
 
 		gradient.mode = (GradientMode)property.FindPropertyRelative("m_mode").intValue;
+
 		var colorProps = property.FindPropertyRelative("m_serializedColorKeys");
 		var alphaProps = property.FindPropertyRelative("m_serializedAlphaKeys");
 
 
-		GradientColorKey[] colorKeys;
-		GradientAlphaKey[] alphaKeys;
-
 		SerializedProperty prop;
 
-		colorKeys = new GradientColorKey[colorProps.arraySize];
-		for (int i = 0; i < colorKeys.Length; i++) {
+		var colorKeys = new List<GradientColorKey>();
+		var alphaKeys = new List<GradientAlphaKey>();
+
+		for (int i = 0; i < colorProps.arraySize; i++) {
+			if (i == excludeColor) continue;
+
 			prop = colorProps.GetArrayElementAtIndex(i);
-			colorKeys[i] = new GradientColorKey(
+
+			colorKeys.Add(new GradientColorKey(
 				prop.FindPropertyRelative("color").colorValue,
 				prop.FindPropertyRelative("time").floatValue / 100f
-			);
+			));
 		}
 
-		alphaKeys = new GradientAlphaKey[alphaProps.arraySize];
-		for(int i = 0; i < alphaKeys.Length; i++) {
+		for(int i = 0; i < alphaProps.arraySize; i++) {
+			if (i == excludeAlpha) continue;
+
 			prop = alphaProps.GetArrayElementAtIndex(i);
-			alphaKeys[i] = new GradientAlphaKey(
+
+			alphaKeys.Add(new GradientAlphaKey(
 				prop.FindPropertyRelative("alpha").floatValue,
 				prop.FindPropertyRelative("time").floatValue / 100f
-			);
+			));
 		}
 
-		gradient.alphaKeys = alphaKeys;
-		gradient.colorKeys = colorKeys;
+		gradient.alphaKeys = alphaKeys.ToArray();
+		gradient.colorKeys = colorKeys.ToArray();
 
 		return gradient;
 	}
