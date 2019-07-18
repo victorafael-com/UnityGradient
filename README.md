@@ -37,6 +37,7 @@ The usage is the same from UnityEngine.Gradient. with the same methods and param
 	}
 ```
 Inspector:
+
 ![](.Docs/Images/inspector.png)
 
 #### About Performance
