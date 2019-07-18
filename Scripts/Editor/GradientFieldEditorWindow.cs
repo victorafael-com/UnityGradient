@@ -64,7 +64,6 @@ public class GradientFieldEditorWindow : EditorWindow {
 		colorHandleHighlight = LoadIconFromRelativePath("/Resources/GradientColorKey.Highlight.png");
 
 	}
-
 	private void OnGUI() {
 		EditorGUI.BeginChangeCheck();
 
@@ -73,7 +72,6 @@ public class GradientFieldEditorWindow : EditorWindow {
 		EditorGUILayout.PropertyField(modeProperty);
 
 		GUILayout.Space(20);
-
 		Rect gradientArea = EditorGUILayout.GetControlRect(GUILayout.Height(50)); //Gray outline
 
 		GUI.color = Color.gray;
@@ -126,7 +124,7 @@ public class GradientFieldEditorWindow : EditorWindow {
 	}
 
 	bool CheckMouse(Rect gradientArea) {
-		bool draggedHandle = false;
+		bool needsUpdate = false;
 
 		if (isDragging && selectedProperty != null) {
 
@@ -137,7 +135,7 @@ public class GradientFieldEditorWindow : EditorWindow {
 					float targetTime = Mathf.InverseLerp(gradientArea.xMin, gradientArea.xMax, Event.current.mousePosition.x);
 
 					selectedProperty.FindPropertyRelative("time").floatValue = targetTime * 100;
-					draggedHandle = true;
+					needsUpdate = true;
 
 					float handleCenter = editMode == EditMode.alpha ? gradientArea.yMin - 9 : gradientArea.yMax + 9;
 
@@ -153,7 +151,6 @@ public class GradientFieldEditorWindow : EditorWindow {
 							/*
 							 * Being unable to double click the selected handler and open the color picker
 							 */
-
 						}
 
 						lastMouseUp = time;
@@ -163,7 +160,7 @@ public class GradientFieldEditorWindow : EditorWindow {
 
 							isDraggingToRemove = false;
 
-							draggedHandle = true;
+							needsUpdate = true;
 						}
 
 						isDragging = false;
@@ -172,7 +169,24 @@ public class GradientFieldEditorWindow : EditorWindow {
 					break;
 			}
 		}
-		return draggedHandle;
+
+		gradientArea = ExpandRect(gradientArea, 0, -5);
+
+		EditorGUIUtility.AddCursorRect(gradientArea, MouseCursor.Link);
+		if (GUI.Button(gradientArea, GUIContent.none, GUIStyle.none)) { //Invisible button for color picking
+			float targetTime = Mathf.InverseLerp(gradientArea.xMin, gradientArea.xMax, Event.current.mousePosition.x);
+
+			var pickedColor = currentGradient.Evaluate(targetTime);
+
+			if(editMode == EditMode.alpha) {
+				selectedProperty.FindPropertyRelative("alpha").floatValue = pickedColor.a;
+			} else {
+				pickedColor.a = 1;
+				selectedProperty.FindPropertyRelative("color").colorValue = pickedColor;
+			}
+		}
+
+		return needsUpdate;
 	}
 
 	bool CheckKeyboard() {
