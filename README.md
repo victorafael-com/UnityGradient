@@ -15,26 +15,26 @@ This project is a case study  trying to Replicate the default Gradient Inspector
 
 The usage is the same from UnityEngine.Gradient. with the same methods and parameters. Just declare the property as GradientField instead of Gradient:
 ```csharp
-	[Header("UnityEngine.Gradient")]
-	public Gradient gradient;
+   [Header("UnityEngine.Gradient")]
+   public Gradient gradient;
 
-	[Header("GradientField")]
-	public GradientField gradientField;
-	
-	void Start()
-    {
-		//Works!
-		gradientField.colorKeys = gradient.colorKeys;
-		gradientField.alphaKeys = gradient.alphaKeys;
-    }
+   [Header("GradientField")]
+   public GradientField gradientField;
 
-    void Update()
-    {
-		//Also works!
-		Color result = gradientField.Evaluate(Time.time);
+   void Start()
+   {
+      //Works!
+      gradientField.colorKeys = gradient.colorKeys;
+      gradientField.alphaKeys = gradient.alphaKeys;
+   }
 
-		Color otherResult = gradientField.Evaluate(Time.time, GradientRepeatMode.PingPong);
-	}
+   void Update()
+   {
+      //Also works!
+      Color result = gradientField.Evaluate(Time.time);
+
+      Color otherResult = gradientField.Evaluate(Time.time, GradientRepeatMode.PingPong);
+   }
 ```
 Inspector:
 
