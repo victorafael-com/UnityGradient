@@ -7,6 +7,9 @@ public class Test : MonoBehaviour
 	public Gradient gradient;
 	public GradientField gradientField;
 
+	public GradientField gradientField2;
+
+	public Color color;
 	[Header("Using UnityEngine.Gradient")]
 	public MeshRenderer refClamped;
 	public MeshRenderer refPingPong;

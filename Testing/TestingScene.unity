@@ -643,7 +643,7 @@ MonoBehaviour:
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 20673
-    ctime1: 44691
+    ctime1: 44932
     ctime2: 55127
     ctime3: 55127
     ctime4: 0
@@ -664,20 +664,20 @@ MonoBehaviour:
   gradientField:
     m_mode: 0
     m_serializedColorKeys:
+    - color: {r: 1, g: 0, b: 0.019191265, a: 1}
+      time: 59.38242
     - color: {r: 0, g: 1, b: 0.48655844, a: 1}
-      time: 97.31993
+      time: 100
     - color: {r: 0, g: 0.96238685, b: 1, a: 1}
-      time: 92.79732
+      time: 92.517815
     - color: {r: 0, g: 0.45413065, b: 1, a: 1}
-      time: 87.9397
+      time: 86.34204
     - color: {r: 0, g: 0.071847916, b: 1, a: 1}
-      time: 81.07203
+      time: 79.57245
     - color: {r: 0.5053053, g: 0, b: 1, a: 1}
       time: 72.696815
     - color: {r: 1, g: 0, b: 0.6930003, a: 1}
-      time: 66.49916
-    - color: {r: 1, g: 0, b: 0.1333332, a: 1}
-      time: 60.134007
+      time: 66.27079
     - color: {r: 1, g: 0.28652796, b: 0, a: 1}
       time: 51.758797
     - color: {r: 1, g: 0.95919526, b: 0, a: 1}
@@ -691,16 +691,27 @@ MonoBehaviour:
     - color: {r: 0, g: 0.7954216, b: 1, a: 1}
       time: 17.922949
     - color: {r: 0.14368343, g: 0, b: 1, a: 1}
-      time: 11.390285
+      time: 11.757719
     - color: {r: 1, g: 0, b: 0, a: 1}
       time: 0
     - color: {r: 1, g: 0, b: 0.7908478, a: 1}
       time: 6.030151
     m_serializedAlphaKeys:
     - alpha: 1
-      time: 100
+      time: 0
+  gradientField2:
+    m_mode: 0
+    m_serializedColorKeys:
+    - color: {r: 1, g: 1, b: 1, a: 1}
+      time: 37.648457
+    - color: {r: 0.754717, g: 0.24563903, b: 0.24563903, a: 1}
+      time: 86.43216
+    m_serializedAlphaKeys:
     - alpha: 1
       time: 0
+    - alpha: 1
+      time: 100
+  color: {r: 1, g: 1, b: 1, a: 1}
   refClamped: {fileID: 1036936053}
   refPingPong: {fileID: 1669383111}
   refRepeat: {fileID: 1881916753}

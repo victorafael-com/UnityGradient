@@ -60,9 +60,10 @@ public class GradientFieldDrawer : PropertyDrawer {
 	private void CheckTextureGradient(float width, SerializedProperty property) {
 		int textureWidth = GradientSize;
 
+		/* Commenting this until I figure out how to deal with the caching issue when using two Gradients at the same time. But this will generate the texture every time :/
 		if (processedGradient != null && processedGradient.width == textureWidth) {
 			return;
-		}
+		}*/
 
 		if (Event.current.type != EventType.Repaint)
 			return;

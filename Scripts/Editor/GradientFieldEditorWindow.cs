@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEditorInternal;
 
-public class GradientFieldEditorWindow : EditorWindow
-{
+public class GradientFieldEditorWindow : EditorWindow {
 	private enum EditMode {
 		color,
 		alpha
@@ -33,13 +33,14 @@ public class GradientFieldEditorWindow : EditorWindow
 
 	private GradientField currentGradient;
 
+	private DateTime lastMouseUp;
+
 	public void Setup(SerializedProperty property) {
 		m_property = property;
 
 		modeProperty = property.FindPropertyRelative("m_mode");
 		colorArrayProperty = property.FindPropertyRelative("m_serializedColorKeys");
 		alphaArrayProperty = property.FindPropertyRelative("m_serializedAlphaKeys");
-
 
 		editMode = EditMode.color;
 		selectedItem = 0;
@@ -53,7 +54,7 @@ public class GradientFieldEditorWindow : EditorWindow
 		GradientFieldDrawer.SetGradientToTexture(currentGradient, gradientTexture);
 		bgTexture = GradientFieldDrawer.GenerateInspectorBackground(30, 2);
 
-		
+
 		alphaHandle = LoadIconFromRelativePath("/Resources/GradientAlphaKey.png");
 		colorHandle = LoadIconFromRelativePath("/Resources/GradientColorKey.png");
 	}
@@ -61,35 +62,40 @@ public class GradientFieldEditorWindow : EditorWindow
 	private void OnGUI() {
 		EditorGUI.BeginChangeCheck();
 
+		GUILayout.Space(10);
+
 		EditorGUILayout.PropertyField(modeProperty);
 
 		GUILayout.Space(20);
 
-		Rect gradientArea = EditorGUILayout.GetControlRect(GUILayout.Height(50));
+		Rect gradientArea = EditorGUILayout.GetControlRect(GUILayout.Height(50)); //Gray outline
 
 		GUI.color = Color.gray;
 		GUI.DrawTexture(gradientArea, Texture2D.whiteTexture);
 
 		gradientArea = ExpandRect(gradientArea, -1, -1);
-		
+
 		GUI.color = Color.white;
 
-		GUI.DrawTexture(gradientArea, bgTexture);
+		GUI.DrawTexture(gradientArea, bgTexture); //Gradient Background
 
-		GUI.DrawTexture(gradientArea, gradientTexture);
+		GUI.DrawTexture(gradientArea, gradientTexture); //Actual Gradient
 
-		DrawKeyLine(gradientArea, gradientArea.yMin - 16, 14, EditMode.alpha, alphaArrayProperty);
-		DrawKeyLine(gradientArea, gradientArea.yMax + 2, 14, EditMode.color, colorArrayProperty);
+		DrawKeyLine(gradientArea, gradientArea.yMin - 16, 14, EditMode.alpha, alphaArrayProperty); //Draw alpha keys
+		DrawKeyLine(gradientArea, gradientArea.yMax + 2, 14, EditMode.color, colorArrayProperty); //Draw color keys
 
 		GUI.color = Color.white;
 
 		GUILayout.Space(20);
 
+
+		//Draw selected item line
+
 		EditorGUILayout.BeginHorizontal();
 
 		EditorGUIUtility.labelWidth = 80;
 
-		EditorGUILayout.PropertyField(selectedProperty.FindPropertyRelative(editMode == EditMode.alpha ? "alpha" : "color"), GUILayout.Width( Screen.width - 170));
+		EditorGUILayout.PropertyField(selectedProperty.FindPropertyRelative(editMode == EditMode.alpha ? "alpha" : "color"), GUILayout.Width(Screen.width - 170));
 
 		GUILayout.Space(20);
 		EditorGUIUtility.labelWidth = 60;
@@ -102,7 +108,20 @@ public class GradientFieldEditorWindow : EditorWindow
 
 		EditorGUIUtility.labelWidth = 0;
 
+		bool needUpdate = false;
+
+		needUpdate = CheckMouse(gradientArea);
+
+		needUpdate = CheckKeyboard() || needUpdate;
+
+		if (EditorGUI.EndChangeCheck() || needUpdate) {
+			Save();
+		}
+	}
+
+	bool CheckMouse(Rect gradientArea) {
 		bool draggedHandle = false;
+
 		if (isDragging && selectedProperty != null) {
 
 			var array = (editMode == EditMode.alpha ? alphaArrayProperty : colorArrayProperty);
@@ -121,28 +140,56 @@ public class GradientFieldEditorWindow : EditorWindow
 					break;
 				case EventType.MouseUp:
 
-					isDragging = false;
-					if (isDraggingToRemove) {
-						array.DeleteArrayElementAtIndex(selectedItem);
+					if (isDragging) {
+						DateTime time = DateTime.Now;
 
-						selectedProperty = array.GetArrayElementAtIndex(0);
-						selectedItem = 0;
+						if(lastMouseUp != null && (lastMouseUp - time).TotalMilliseconds < 500) {
+							/*
+							 * Being unable to double click the selected handler and open the color picker
+							 */
 
-						isDraggingToRemove = false;
+						}
 
-						draggedHandle = true;
+						lastMouseUp = time;
+
+						if (isDraggingToRemove) {
+							DeleteSelectedItem();
+
+							isDraggingToRemove = false;
+
+							draggedHandle = true;
+						}
+
+						isDragging = false;
 					}
 
 					break;
 			}
 		}
-
-
-
-		if (EditorGUI.EndChangeCheck() || draggedHandle) {
-			Save();
-		}
+		return draggedHandle;
 	}
+
+	bool CheckKeyboard() {
+		if(Event.current.type == EventType.KeyUp) {
+			if(Event.current.keyCode == KeyCode.Delete) {
+				DeleteSelectedItem();
+				Event.current.Use();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void DeleteSelectedItem() {
+		var array = (editMode == EditMode.alpha ? alphaArrayProperty : colorArrayProperty);
+
+		if (array.arraySize == 1) return;
+		array.DeleteArrayElementAtIndex(selectedItem);
+
+		selectedProperty = array.GetArrayElementAtIndex(0);
+		selectedItem = 0;
+	}
+
 	void DrawKeyLine(Rect bounds, float y, float height, EditMode targetEditMode, SerializedProperty array) {
 		bool isPointerDown = false;
 
@@ -156,7 +203,7 @@ public class GradientFieldEditorWindow : EditorWindow
 
 		int arraySize = array.arraySize;
 		SerializedProperty prop;
-		Rect r;
+		Rect currentRect;
 		for(int i = 0; i < arraySize; i++) {
 			prop = array.GetArrayElementAtIndex(i);
 
@@ -164,27 +211,27 @@ public class GradientFieldEditorWindow : EditorWindow
 
 			x -= 3;
 
-			Color col;
+			Color color;
 			if (targetEditMode == EditMode.alpha) {
 				float a = prop.FindPropertyRelative("alpha").floatValue;
-				col = new Color(a, a, a);
+				color = new Color(a, a, a);
 			} else {
-				col = prop.FindPropertyRelative("color").colorValue;
-				col.a = 1;
+				color = prop.FindPropertyRelative("color").colorValue;
+				color.a = 1;
 			}
 
 			if(targetEditMode == editMode && selectedItem == i && isDraggingToRemove) {
-				col = Color.clear;
+				color = Color.clear;
 			}
 
-			GUI.color = col;
-			r = new Rect(x, y, 9, height);
-			GUI.DrawTexture(r, targetEditMode == EditMode.alpha ? alphaHandle : colorHandle);
+			GUI.color = color;
+			currentRect = new Rect(x, y, 9, height);
+			GUI.DrawTexture(currentRect, targetEditMode == EditMode.alpha ? alphaHandle : colorHandle);
 
 			//Check if user clicked on current point
 			if (isPointerDown) {
-				r = ExpandRect(r, 5, 2); //Expands rect to make it easier to click
-				if (r.Contains(Event.current.mousePosition)) {
+				currentRect = ExpandRect(currentRect, 5, 2); //Expands rect to make it easier to click
+				if (currentRect.Contains(Event.current.mousePosition)) {
 					selectedProperty = prop;
 					editMode = targetEditMode;
 					isDragging = true;
