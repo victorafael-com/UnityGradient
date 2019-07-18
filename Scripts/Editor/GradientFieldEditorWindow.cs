@@ -27,6 +27,8 @@ public class GradientFieldEditorWindow : EditorWindow {
 
 	private Texture2D alphaHandle;
 	private Texture2D colorHandle;
+	private Texture2D alphaHandleHighlight;
+	private Texture2D colorHandleHighlight;
 
 	private bool isDragging;
 	private bool isDraggingToRemove;
@@ -57,6 +59,10 @@ public class GradientFieldEditorWindow : EditorWindow {
 
 		alphaHandle = LoadIconFromRelativePath("/Resources/GradientAlphaKey.png");
 		colorHandle = LoadIconFromRelativePath("/Resources/GradientColorKey.png");
+		
+		alphaHandleHighlight = LoadIconFromRelativePath("/Resources/GradientAlphaKey.Highlight.png");
+		colorHandleHighlight = LoadIconFromRelativePath("/Resources/GradientColorKey.Highlight.png");
+
 	}
 
 	private void OnGUI() {
@@ -190,6 +196,7 @@ public class GradientFieldEditorWindow : EditorWindow {
 		selectedItem = 0;
 	}
 
+	// Draws the gradient key line
 	void DrawKeyLine(Rect bounds, float y, float height, EditMode targetEditMode, SerializedProperty array) {
 		bool isPointerDown = false;
 
@@ -207,6 +214,8 @@ public class GradientFieldEditorWindow : EditorWindow {
 		for(int i = 0; i < arraySize; i++) {
 			prop = array.GetArrayElementAtIndex(i);
 
+			bool isDrawingSelectedItem = targetEditMode == editMode && selectedItem == i;
+
 			float x = Mathf.Lerp(bounds.xMin, bounds.xMax, prop.FindPropertyRelative("time").floatValue / 100);
 
 			x -= 3;
@@ -220,15 +229,20 @@ public class GradientFieldEditorWindow : EditorWindow {
 				color.a = 1;
 			}
 
-			if(targetEditMode == editMode && selectedItem == i && isDraggingToRemove) {
+			if(isDrawingSelectedItem && isDraggingToRemove) {
 				color = Color.clear;
 			}
 
 			GUI.color = color;
 			currentRect = new Rect(x, y, 9, height);
+
 			GUI.DrawTexture(currentRect, targetEditMode == EditMode.alpha ? alphaHandle : colorHandle);
 
-			//Check if user clicked on current point
+			if (isDrawingSelectedItem) {
+				GUI.color = Color.white;
+				GUI.DrawTexture(currentRect, targetEditMode == EditMode.alpha ? alphaHandleHighlight : colorHandleHighlight);
+			}
+
 			if (isPointerDown) {
 				currentRect = ExpandRect(currentRect, 5, 2); //Expands rect to make it easier to click
 				if (currentRect.Contains(Event.current.mousePosition)) {
